@@ -1,0 +1,4 @@
+0 Compost
+1 Trash
+2 Recycle
+3 Person
