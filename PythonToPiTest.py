@@ -1,4 +1,4 @@
-#Currently only allows basic input from python file to be read by arduino
+#Currently only allows basic input from python file to be read on pi
 
 import trace
 import tensorflow #NEED TO INSTALL THESE
@@ -12,6 +12,11 @@ import cv2  # import opencv-python
 import numpy as np # import numpy for arrays
 import time #import time for delays
 import serial #import serial for arduino communication
+import os
+
+# Setting up virtual environ for Camera input to function
+os.system('Xvfb :0 -screen 0 1024x768x24 &')
+os.environ['DISPLAY'] = ':0'
 
 # Disable scientific notation for clarity
 np.set_printoptions(suppress=True)
@@ -23,7 +28,7 @@ model = load_model("keras_Model.h5", compile=False)
 class_names = open("labels.txt", "r").readlines()
 
 # CAMERA can be 0 or 1 based on default camera of your computer
-camera = cv2.VideoCapture(1) #Might need to swap this to something connecting to the PI
+camera = cv2.VideoCapture(0) #Might need to swap this to something connecting to the PI
 
 def returnvalues(value): #function to return integer value that will be read into arduino
     if value == 0:
@@ -34,17 +39,20 @@ def returnvalues(value): #function to return integer value that will be read int
         return 2 #recycle
     if value == 3:
         return 3 #people
-    
+
 
 #https://www.ics.com/blog/control-raspberry-pi-gpio-pins-python is where I found info on gpiozero
 #setup the LEDs on the pins (need to get the pin numbers from the pi first)
-Trash_LED = LED(1)
-Recycle_LED = LED(2)
-Compost_LED = LED(3)
+Trash_LED = LED(17)
+Recycle_LED = LED(27)
+Compost_LED = LED(22)
 
 #https://tutorials-raspberrypi.com/raspberry-pi-ultrasonic-sensor-hc-sr04/
-Ultrasonic = DistanceSensor(echo = 4, trigger = 5) #Those two are two different pins
+Ultrasonic = DistanceSensor(echo = 5, trigger = 6) #Those two are two different pins
 #PIN NUMBERS ARE TEMPORARY
+
+#Need to set up a variable to keep track of the distance as it is not calliable
+Sensor_distance = Ultrasonic.distance
 
 while True:
     # Grab the webcamera's image.
@@ -102,8 +110,8 @@ while True:
     if keyboard_input == 27:
         break
 
-    if not DistanceSensor.distance() < 0.05 and DistanceSensor.distance() <= 0.25: #if equal or less than 25 cm away and greater than 5 cm away 
-        values=returnvalues(index) #get value relating to trash shoot to send to arduino
+    if 0.05 < Sensor_distance <= 0.25: #if equal or less than 25 cm away and greater than 5 cm away 
+        values = returnvalues(index) #get value relating to trash shoot to send to arduino
         if values == 0:
             Compost_LED.on
             Trash_LED.off
