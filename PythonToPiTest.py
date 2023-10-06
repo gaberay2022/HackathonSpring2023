@@ -51,9 +51,6 @@ Compost_LED = LED(22)
 Ultrasonic = DistanceSensor(echo = 5, trigger = 6) #Those two are two different pins
 #PIN NUMBERS ARE TEMPORARY
 
-#Need to set up a variable to keep track of the distance as it is not calliable
-Sensor_distance = Ultrasonic.distance
-
 while True:
     # Grab the webcamera's image.
     ret, image = camera.read()
@@ -100,8 +97,11 @@ while True:
     class_name = class_names[index]
     confidence_score = prediction[0][index]
 
+    Sensor_distance = Ultrasonic.distance # Keep track os sensor distance
+
     print("Class:", class_name[2:], end="")
     print("Confidence Score:", str(np.round(confidence_score * 100))[:-2], "%")
+    print("Distance from sensor:",Sensor_distance)
 
     # Listen to the keyboard for presses.
     keyboard_input = cv2.waitKey(1)
@@ -110,25 +110,31 @@ while True:
     if keyboard_input == 27:
         break
 
-    if 0.05 < Sensor_distance <= 0.25: #if equal or less than 25 cm away and greater than 5 cm away 
+    if 0.05 < Sensor_distance <= 0.25: #if equal or less than 25 cm away and greater than 5 cm away
         values = returnvalues(index) #get value relating to trash shoot to send to arduino
         if values == 0:
-            Compost_LED.on
-            Trash_LED.off
-            Recycle_LED.off
+            Compost_LED.on()
+            Trash_LED.off()
+            Recycle_LED.off()
         elif values == 1:
-            Compost_LED.off
-            Trash_LED.on
-            Recycle_LED.off
+            Compost_LED.off()
+            Trash_LED.on()
+            Recycle_LED.off()
         elif values == 2:
-            Compost_LED.off
-            Trash_LED.off
-            Recycle_LED.on
+            Compost_LED.off()
+            Trash_LED.off()
+            Recycle_LED.on()
         else:
-            Trash_LED.off
-            Recycle_LED.off
-            Compost_LED.off
-        time.sleep(4) #pause python program for delay
+            Trash_LED.off()
+            Recycle_LED.off()
+            Compost_LED.off()
+
+        time.sleep(3) #pause python program for delay
+
+    else:
+        Trash_LED.off()
+        Recycle_LED.off()
+        Compost_LED.off()
 
 camera.release() #close camera access when esc key pressed
 cv2.destroyAllWindows() #destroys cv window
